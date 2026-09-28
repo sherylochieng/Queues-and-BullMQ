@@ -13,6 +13,10 @@ function currentPeriod(cycleDay) {
   return { start, end };
 }
 
+// ---------------------------------------------------------------
+// DAY 2: setup, members, balance, stats
+// ---------------------------------------------------------------
+
 // Creates the chama AND opens its first cycle in one transaction (invariant 6)
 async function create({ chatId, name, monthlyAmountCents, cycleDay, treasurerUserId }) {
   const client = await pool.connect();
@@ -166,7 +170,77 @@ async function getMemberStatusList(chatId) {
   return rows;
 }
 
+// ===== DAY 3 ADDITION =====
+// Cycles and contributions, used by /contribute and the M-Pesa flow
+// ---------------------------------------------------------------
+
+// ===== DAY 3 ADDITION =====
+// The chama's current open cycle (there is only ever one: invariant 1)
+async function getOpenCycle(chatId) {
+  const { rows } = await pool.query(
+    "SELECT * FROM cycles WHERE chama_id = $1 AND status = 'open'",
+    [chatId]
+  );
+  return rows[0] || null;
+}
+
+// ===== DAY 3 ADDITION =====
+async function getCycle(cycleId) {
+  const { rows } = await pool.query("SELECT * FROM cycles WHERE id = $1", [cycleId]);
+  return rows[0] || null;
+}
+
+// ===== DAY 3 ADDITION =====
+async function getContribution(contributionId) {
+  const { rows } = await pool.query("SELECT * FROM contributions WHERE id = $1", [contributionId]);
+  return rows[0] || null;
+}
+
+// ===== DAY 3 ADDITION =====
+// A new contribution always starts as 'pending' (the table default)
+async function createContribution({ cycleId, chamaId, memberUserId, amountCents }) {
+  const { rows } = await pool.query(
+    `INSERT INTO contributions (cycle_id, chama_id, member_user_id, amount_cents)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [cycleId, chamaId, memberUserId, amountCents]
+  );
+  return rows[0];
+}
+
+// ===== DAY 3 ADDITION =====
+// Saves the M-Pesa reference after the STK Push is sent
+async function updateContribution(contributionId, { mpesa_reference }) {
+  await pool.query(
+    "UPDATE contributions SET mpesa_reference = $2 WHERE id = $1",
+    [contributionId, mpesa_reference]
+  );
+}
+
+// ===== DAY 3 ADDITION =====
+// Atomic: only confirms if still pending, so a callback that fires twice does nothing the second time
+async function confirmContribution(contributionId) {
+  const { rowCount } = await pool.query(
+    `UPDATE contributions
+     SET status = 'confirmed', confirmed_at = NOW()
+     WHERE id = $1 AND status = 'pending'`,
+    [contributionId]
+  );
+  return rowCount > 0;
+}
+
+// ===== DAY 3 ADDITION =====
+// Same idea for failures (user cancelled, wrong PIN, timeout)
+async function failContribution(contributionId) {
+  const { rowCount } = await pool.query(
+    "UPDATE contributions SET status = 'failed' WHERE id = $1 AND status = 'pending'",
+    [contributionId]
+  );
+  return rowCount > 0;
+}
+
 module.exports = {
+  // Day 2
   create,
   findByChatId,
   findMember,
@@ -176,4 +250,12 @@ module.exports = {
   getMemberTotals,
   getGroupStats,
   getMemberStatusList,
+  // ===== DAY 3 ADDITION =====
+  getOpenCycle,
+  getCycle,
+  getContribution,
+  createContribution,
+  updateContribution,
+  confirmContribution,
+  failContribution,
 };
