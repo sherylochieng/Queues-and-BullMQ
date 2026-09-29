@@ -9,11 +9,12 @@ const join = require("./chama/commands/join");
 const balance = require("./chama/commands/balance");
 const stats = require("./chama/commands/stats");
 const members = require("./chama/commands/members");
+const contribute = require("./chama/commands/contribute");
 
 // Polling = the bot asks Telegram for new messages. No ngrok needed while testing.
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-const commands = { setup, join, balance, stats, members };
+const commands = { setup, join, balance, stats, members, contribute };
 
 // "/setup@MyBot Kilimani Chama 1000 1" -> { command: "setup", args: ["Kilimani", "Chama", "1000", "1"] }
 function parseCommand(text) {
