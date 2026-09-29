@@ -14,6 +14,10 @@ async function findByChatId(chatId) {
   return repo.findByChatId(chatId);
 }
 
+async function getOpenCycle(chatId) {
+  return repo.getOpenCycle(chatId);
+}
+
 async function findMember(chatId, userId) {
   return repo.findMember(chatId, userId);
 }
@@ -64,4 +68,5 @@ module.exports = {
   startMemberOnboarding,
   getMemberOnboarding,
   completeMemberOnboarding,
+  getOpenCycle,
 };
