@@ -7,6 +7,13 @@ const SHORTCODE = process.env.DARAJA_SHORTCODE?.trim();
 const PASSKEY = process.env.DARAJA_PASSKEY?.trim();
 const CALLBACK_URL = process.env.DARAJA_CALLBACK_URL?.trim();
 
+console.log("Daraja env check:", {
+  key: CONSUMER_KEY ? `${CONSUMER_KEY.slice(0, 4)}...` : "MISSING",
+  secret: CONSUMER_SECRET ? "set" : "MISSING",
+  shortcode: SHORTCODE || "MISSING",
+  passkey: PASSKEY ? "set" : "MISSING",
+});
+
 // ─── Phone format ────────────────────────────────────────────────────────────
 // Members are stored as +2547XXXXXXXX, but Daraja wants 2547XXXXXXXX.
 // Also handles 07XXXXXXXX and 7XXXXXXXX.
