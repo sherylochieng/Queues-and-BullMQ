@@ -6,6 +6,8 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
+app.use("/api/daraja", require("./routes/daraja.routes"));
+
 // Simple check that the server is alive
 app.get("/health", (req, res) => {
   res.json({ ok: true });
